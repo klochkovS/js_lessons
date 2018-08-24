@@ -1,10 +1,61 @@
 
+function Machine(power) {
+  this._power = power;
+  this._enabled = false;
+
+  this.enable = function () {
+    this._enabled = true;
+  };
+
+  this.disable = function () {
+    this._enabled = false;
+  };
+}
+
+function Fridge(power) {
+  Machine.call(this, power);
+
+  const food = [];
+
+  this.addFood = function (...args) {
+    if (!this._enabled) {
+      throw new Error('Error, the fridge is off');
+    }
+
+    if ((this._power / 100) < (food.length + args.length)) {
+      throw new Error('Error, the fridge is full');
+    }
+
+    food.push(...args);
+  };
+
+  this.getFood = function () {
+    return food.slice();
+  };
+
+  this.filterFood = function (cb) {
+    return food.filter(cb);
+  };
+
+  this.removeFood = function (item) {
+    const id = food.indexOf(item);
+    if (id !== -1) food.splice(id, 1);
+  }
+}
+
 function CoffeeMachine(power, capacity) {
-  let waterAmount = 0;
+  Machine.call(this, power);
 
   const WATER_HEAT_CAPACITY = 4200;
+
+  const parentDisable = this.disable;
+  let waterAmount = 0;
   let timerId;
 
+  this.disable = function () {
+    parentDisable.call(this);
+    this.stop();
+  };
 
   this.isRunning = function () {
     return !!timerId;
@@ -44,6 +95,9 @@ function CoffeeMachine(power, capacity) {
 
 
   this.run = function () {
+    if (!this._enabled) {
+      throw new Error('Error, coffee machine is off');
+    }
     timerId = setTimeout(() => { timerId = null; onReady(); }, getBoilTime());
   };
 
@@ -56,14 +110,42 @@ function CoffeeMachine(power, capacity) {
   };
 }
 
-const coffeeMachine = new CoffeeMachine(1000, 500);
+// const coffeeMachine = new CoffeeMachine(1000, 500);
 
-coffeeMachine.addWater(200);
+// coffeeMachine.setWaterAmount(100);
+// coffeeMachine.enable();
+// coffeeMachine.run();
+// coffeeMachine.disable();
 
-console.log(`Before: ${coffeeMachine.isRunning()}`);
-coffeeMachine.run();
-console.log(`In the process: ${coffeeMachine.isRunning()}`);
-
-coffeeMachine.setOnReady(() => {
-  console.log(`After: ${coffeeMachine.isRunning()}`);
+var fridge = new Fridge(500);
+fridge.enable();
+fridge.addFood({
+  title: "котлета",
+  calories: 100
 });
+fridge.addFood({
+  title: "сок",
+  calories: 30
+});
+fridge.addFood({
+  title: "зелень",
+  calories: 10
+});
+fridge.addFood({
+  title: "варенье",
+  calories: 150
+});
+
+fridge.removeFood("нет такой еды"); // без эффекта
+alert(fridge.getFood().length); // 4
+
+var dietItems = fridge.filterFood(function (item) {
+  return item.calories < 50;
+});
+
+dietItems.forEach(function (item) {
+  alert(item.title); // сок, зелень
+  fridge.removeFood(item);
+});
+
+alert(fridge.getFood().length); // 2
