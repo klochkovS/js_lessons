@@ -14,8 +14,15 @@ function Machine(power) {
 
 function Fridge(power) {
   Machine.call(this, power);
-
+  const parentDisable = this.disable();
   const food = [];
+
+  this.disable = function () {
+    if (food.length > 0) {
+      throw new Error('Error, the fridge have a meal');
+    }
+    parentDisable.call(this);
+  };
 
   this.addFood = function (...args) {
     if (!this._enabled) {
@@ -117,35 +124,8 @@ function CoffeeMachine(power, capacity) {
 // coffeeMachine.run();
 // coffeeMachine.disable();
 
-var fridge = new Fridge(500);
+const fridge = new Fridge(500);
+
 fridge.enable();
-fridge.addFood({
-  title: "котлета",
-  calories: 100
-});
-fridge.addFood({
-  title: "сок",
-  calories: 30
-});
-fridge.addFood({
-  title: "зелень",
-  calories: 10
-});
-fridge.addFood({
-  title: "варенье",
-  calories: 150
-});
-
-fridge.removeFood("нет такой еды"); // без эффекта
-alert(fridge.getFood().length); // 4
-
-var dietItems = fridge.filterFood(function (item) {
-  return item.calories < 50;
-});
-
-dietItems.forEach(function (item) {
-  alert(item.title); // сок, зелень
-  fridge.removeFood(item);
-});
-
-alert(fridge.getFood().length); // 2
+fridge.addFood('apple');
+fridge.disable();
